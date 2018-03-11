@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+</head>
+<body>
+
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th style="width:1%">
+					<button class="iconBtn glyphicon glyphicon-remove-sign deleteColor"
+						 title="Remove All" ng-click="resetTasks()"></button>
+				</th>
+				<th colspan="5" style="width:30%">Task Description</th>
+				<th style="width:15%">Resource Assigned</th>
+				<th style="width:7%">Effort</th>
+				<th style="width:5%">Start Date</th>
+				<th style="width:5%">End Date</th>
+				<th style="width:7%">% Complete</th>
+				<th style="width:15%">Status</th>
+				<th style="width:15%">Jira ID</th>				
+				<th colspan="3" style="width:3%">
+				<button class="iconBtn glyphicon glyphicon-plus-sign addColor" 
+				title="Add Task"
+				ng-click="addTaskToList()">
+				</button>
+				</th>
+				
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-if="resourceAllocation.length===0">
+				<td colspan="15" class="text-center">Add some tasks.</td>
+			</tr>
+			<tr ng-repeat="x in resourceAllocation" style="width:1%">
+				<td>
+					<button class="iconBtn glyphicon glyphicon-remove-sign deleteColor"
+						title="Remove Task"					
+						ng-click="removeTaskFromList($index, resourceAllocation, resources)"
+						></button>
+				</td>
+				<!-- Set the max no. of levels to 5 including the parent task -->
+				<!-- <td ng-repeat="n in [].constructor(x.level) track by $index"><span 
+					class="chainSubtasks glyphicon glyphicon-object-align-horizontal"></span>
+				</td>-->
+				<td colspan="5" style="width:30%"><input class="form-control" type="text"
+					ng-model="x.taskDescription" /></td>
+				 <!-- <td ng-repeat="n in [].constructor(4-x.level) track by $index"> -->
+				</td>
+				<td style="width:15%"><select ng-init="oldResource=''" ng-model="x.name"
+					class="form-control"
+					ng-show="!x.isParent" ng-disabled="x.taskDescription === ''"
+					ng-focus="oldResource=x.name"
+					ng-change="changeResource($index, x.name, oldResource)">
+						<option selected="x.name === ''" value=""></option>
+						<option ng-repeat="i in resources"
+							selected="x.name === {{i.name}}" value="{{i.name}}" title="{{i.nextAvailableOn | date : 'dd-MM-yyyy'}}">{{i.name}}</option>
+				</select></td>
+				<td style="width:7%"><input ng-init="oldEffort=''" class="form-control"
+					type="number" ng-model="x.effort" ng-focus="oldEffort=x.effort"
+					placeholder="Person Days"
+					ng-disabled="x.taskDescription === '' || x.isParent"
+					ng-change="changeEffort($index,oldEffort)" /></td>
+				<td style="width:5%"><input class="form-control" type="date" ng-model="x.startDate"
+					ng-disabled="x.taskDescription === '' || x.isParent"
+					ng-change="changeStartDate($index)" /></td>
+				<td style="width:5%"><input class="form-control" type="date" ng-model="x.endDate"
+					ng-disabled="true" /></td>
+				<td style="width:7%"><input min="0" class="form-control" type="number" ng-model="x.prcntComplete"
+					ng-disabled="x.taskDescription === ''" /></td>
+				<td style="width:15%">
+					<select ng-model="x.status"
+						ng-disabled="x.taskDescription === ''"
+						class="form-control">
+						<option ng-repeat="i in statusList"
+							selected="x.status === i" value="{{i}}">{{i}}</option>
+				</select></td>	
+				<td style="width:15%"><input ng-disabled="x.taskDescription === ''" class="form-control makeAllCapital" type="text" ng-model="x.jiraid" ></td>
+				<td style="width:1%">
+					<button
+						ng-init="clicked=false"
+						title="Add Comment"
+						uib-popover-template="popoverHtml"
+						popover-placement="bottom"
+						class="iconBtn glyphicon glyphicon-comment showComment"
+						ng-click="clicked=!clicked"
+						ng-class="clicked ? showComment : hideComment"
+						></button>
+				</td>					
+				<td style="width:1%">
+					<button 
+						ng-disabled="x.taskDescription === ''"
+						ng-click="addSubTask($index)"
+						title="Add Sub-Task"		
+						level="{{x.level}}"				
+						class="iconBtn glyphicon glyphicon-collapse-down subTaskColor"></button>
+				</td>
+  				<td style="width:1%">
+					<button ng-click="cloneTask($index)"
+						ng-disabled="x.taskDescription === ''"						
+						title="Clone Task"					
+						class="iconBtn glyphicon glyphicon-copy cloneTask"
+						></button>
+				</td>
+			</tr>
+    		<script type="text/ng-template" id="popoverTemplate.html">
+        		<div>
+          		<textarea class="comments" ng-model="x.comment"></textarea>
+        		</div>
+    		</script>
+		</tbody>
+	</table>
+
+	<div>
+	</div>
+
+	<div class="fileSection">
+		<div class="fileSubSection">
+			<div class="subSectionHeading">
+				<label>Download/Upload a Local Copy</label>
+				<button ng-click="importDataFromExcel()"
+					title="Import From xlsx"				
+					class="iconBtn glyphicon glyphicon-upload"></button>
+				<button class="iconBtn glyphicon glyphicon-download"
+					title="Export to xlsx"				
+					ng-click="exportData()"></button>
+			</div>
+			<div class="syncSectionLocal">
+				<div class="form-group">
+					<label>Select File</label> <input type="file" 
+					id="fileImport"
+					accept=".xlsx"
+					data-toggle="tooltip"
+					title="Choose file"						
+					ng-blur="storeDateToImportTmp($event)" header="1"
+					class="form-control" />
+				</div>
+				<div class="form-group">
+					<label>Sheet Name</label> <input type="text" id="localSheetName"
+						class="form-control" />
+				</div>
+			</div>
+		</div>
+		<div class="fileSubSection">
+			<div class="subSectionHeading">
+				<label>Sync with Google Spreadsheet</label>
+				<button class="iconBtn glyphicon glyphicon-cloud-download"
+					title="Read From"				
+					ng-click="sendRequestToReadFromGsheet()"></button>
+				<button class="iconBtn glyphicon glyphicon-cloud-upload"
+					title="Write To"				
+					ng-click="sendRequestToWriteToGsheet()"></button>
+			</div>
+			<div class="syncSectionDrive">
+				<div class="form-group">
+					<label>SpreadSheet Id</label> <input type="text"
+						id="gsheetId" class="form-control" value="{{gsheetid}}"/>
+				</div>
+				<div class="form-group">
+					<label>Sheet Name</label> <input type="text" id="gsheetName"
+						class="form-control" value="{{gsheetname}}"/>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

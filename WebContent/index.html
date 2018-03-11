@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Work Breakdown Structure</title>
+	
+	<link rel="stylesheet" type="text/css" href="resources/css/bootstrap.min.css" />
+	<link rel="stylesheet" type="text/css" href="resources/css/font-awesome.min.css" />
+	<link rel="stylesheet" type="text/css" href="resources/css/wbsCss.css" />
+	
+	<!-- angular scripts -->
+    <script src="resources/js/angular.js"></script> 
+    <script src="resources/js/angular-route.js"></script> 
+    <script src="resources/js/ui-bootstrap-tpls-2.5.0.js"></script> 
+    
+    <!-- for gsheet -->
+	<script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+	
+	<!-- app scripts -->
+	<script src="resources/js/myApp.js" ></script>
+	<script src="resources/js/constants.js" ></script>
+	<script src="resources/js/taskController1.js" ></script>
+	<script src="resources/js/resourceController.js" ></script>
+	<script src="resources/js/myServices1.js" ></script>
+	<script src="resources/js/commonHelper.js" ></script>
+	<script src="resources/js/ng-table-excel-export.js" ></script>
+	<script src="resources/js/myGLoginService.js" ></script>
+	<script src="resources/js/modalService.js" ></script>
+	
+	  <script src="resources/js/xlsx.js"></script>
+		  <script src="resources/js/xlsx-model.js"></script> 
+	  <script src="resources/js/importTableFromExcel.js"></script>
+	  
+	  <script src="resources/js/alasql.min.js"></script>
+	  <script src="resources/js/xlsx.core.min.js"></script>
+	  
+</head>
+<body class="parentbody">
+<div ng-app="WBS" class="wbs">
+	<div class="container-fluid">
+		<ul class="nav nav-tabs nav-justified .navbar-fixed-top">
+			<li id="resource" class="nav-item"><a class="nav-link" href="#!/manageResources">Manage Resources</a></li>
+			<li id="task" class="nav-item"><a class="nav-link" href="#!/manageTasks">Manage Tasks</a></li>
+		</ul>
+	
+		<div ng-view></div>
+	
+	</div>
+</div>
+</body>
+</html>

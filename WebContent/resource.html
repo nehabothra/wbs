@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>wbs</title>
+</head>
+<body>
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>
+					<button ng-click="resetResources()" 
+						title="Remove All" class="iconBtn glyphicon glyphicon-trash deleteColor">
+					</button>
+				</th>
+				<th>Resource Name</th>
+				<th>Joining Date</th>
+				<th colspan="3">Add Holiday(s) (From - To Dates)</th>
+				<th>Holiday List</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-if="resources.length===0">
+				<td colspan="7" class="text-center">Add some resources.</td>
+			</tr>		
+			<tr ng-repeat="x in resources">
+				<td >
+					<button class="iconBtn glyphicon glyphicon-trash deleteColor" 
+						title="Remove Resource" ng-click="removeResourceFromList($index)">
+					</button>
+				</td>
+
+				<td><input id="resourceName"
+							class="form-control"	
+							ng-model="x.name" 
+							ng-disabled="true" />
+				</td>
+				<td><input value="x.jd" type="date" class="form-control"
+					ng-blur="editResourceDetails($index)" ng-model="x.jd"
+					id="resourceJd" />
+				</td>
+				<td>
+					<input type="date" class="form-control" ng-model="x.tmpFrom" /> 
+				</td>
+				<td>
+ 					<input type="date" class="form-control" ng-model="x.tmpTo" />
+				</td>
+				<td>
+					<button class="iconBtn fa fa-calendar-plus-o" 
+								title="Add Holiday(s)"
+								ng-click="addHolidayToList($index)"></button>
+				</td>
+				<td>
+					<ul id="holidayList" class="list-group">
+						<li ng-repeat="dates in x.holidayList">{{dates | date:
+							'MM/dd/yyyy'}} <i class="glyphicon glyphicon-remove"
+							ng-click="removeHolidayFromList(x.name,dates)"> </i>
+						</li>
+					</ul>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<form class="form-inline" name="myForm" id="myForm">
+		<div class="form-group">
+			<label for="resourceName">Name</label> <input type="text"
+				class="form-control"
+				name="newName" ng-model="newName" required />
+		</div>
+
+		<div class="form-group">
+			<label for="resourceJd">Joining Date</label> <input type="date"
+				class="form-control"
+				name="newJd" ng-model="newJd" required />
+		</div>
+
+		<div class="form-group">
+			<button
+				ng-disabled="myForm.newName.$invalid || myForm.newJd.$invalid"
+				title="Add Resource"
+				ng-click="addResourceToList(newName, newJd)"
+				class="iconBtn glyphicon glyphicon-plus-sign"></button>
+		</div>
+	</form>
+
+	<div class="row fileSection">
+		<div class="fileSubSection">
+			<div class="subSectionHeading">
+				<label>Download/Upload a Local Copy</label>
+				<button ng-click="importDataFromExcel()"
+					data-toggle="tooltip"
+					title="Import from xlsx"
+					class="iconBtn glyphicon glyphicon-upload"></button>
+				<button ng-click="exportData()"
+					data-toggle="tooltip"
+					title="Export to xlsx"
+					class="iconBtn glyphicon glyphicon-download"></button>
+			</div>
+			<div class="syncSectionLocal">
+				<div class="form-group">
+					<label>Select File</label> <input type="file"
+						id="fileImport" 
+						class="form-control" 
+						data-toggle="tooltip"
+						title="Choose file"
+						accept=".xlsx"
+						ng-blur="storeDateToImportTmp($event)" />						
+				</div>
+				<div class="form-group">
+					<label>Sheet Name</label> <input type="text" id="localSheetName"
+						class="form-control" />
+				</div>				
+			</div>
+		</div>
+		<div class="fileSubSection">
+			<div class="subSectionHeading">
+				<label> Sync With Google Sheet </label>
+				<button class="iconBtn glyphicon glyphicon-cloud-download"
+					data-toggle="tooltip"
+					title="Read From"
+					ng-click="sendRequestToReadFromGsheet()"></button>
+				<button class="iconBtn glyphicon glyphicon-cloud-upload"
+					data-toggle="tooltip"
+					title="Write To"
+					ng-click="sendRequestToWriteToGsheet()"></button>
+			</div>
+			<div class="syncSectionDrive">
+				<div class="form-group">
+					<label>Spreadsheet ID</label> <input type="text"
+						id="gsheetId" class="form-control" value="{{gsheetid}}"/>
+				</div>
+				<div class="form-group">
+					<label>Sheet Name</label> <input type="text" id="gsheetName"
+						class="form-control" value="{{gsheetname}}" />
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

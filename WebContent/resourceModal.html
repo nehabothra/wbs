@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Resource Modal</title>
+</head>
+<body>
+        <div class="modal-body text-center" id="modal-body" ng-bind="modalCtrl.modalContent" style="white-space:pre">
+        </div>
+        <div class="modal-footer" ng-show="modalCtrl.footerShow" >
+            <button class="btn btn-primary" type="button" ng-show="modalCtrl.okButton" ng-click="modalCtrl.ok()">OK</button>
+            <button class="btn btn-warning" type="button" ng-show="modalCtrl.cancelButton" ng-click="modalCtrl.cancel()">Cancel</button>
+            <button class="btn btn-success" type="button" ng-show="modalCtrl.yesButton" ng-click="modalCtrl.yes()">Yes</button>
+            <button class="btn btn-danger" type="button" ng-show="modalCtrl.noButton" ng-click="modalCtrl.no()">No</button>
+        </div>
+</body>
+</html>

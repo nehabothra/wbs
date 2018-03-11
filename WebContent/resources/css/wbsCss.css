@@ -1,0 +1,217 @@
+@CHARSET "ISO-8859-1";
+
+		.container-fluid{
+		padding-top : 1%;
+		}
+		
+		.defaultView{
+		background: url("../images/image1.jpg") cover no-repeat center fixed;
+		
+		}
+		
+		.floatMeRight{
+			float:right;
+			position :relative;
+			margin-right:10px;
+		}
+	
+		.table{
+			margin-top:2%;
+			margin-bottom:2%;
+			border: 1px solid #067293;
+		}
+		
+		.table > thead {
+		background-color : #067293;
+		color : white;
+		}
+
+		.table-hover>tbody>tr:hover,.table-hover>tbody>tr>td:hover,.table-hover>tbody>tr>th:hover
+			{
+			background-color: #e8e8e8
+		}
+
+		input.editTask{
+			border : 0px solid;
+			padding-left : 10px;
+			text-align: left;
+		    font-family: monospace;
+		}
+		
+		input,select:disabled{
+			background-color : #eff4f4;
+			color : black;
+		}
+
+		.nav-tabs.nav-justified>li>a{
+		border-radius:0px;
+		}
+
+		.nav > li > a, .nav > li > a:hover{
+		    font-weight: bold;
+			background-color : #6bb1c6;
+			color : white;
+		}
+		
+		.nav > li.active > a, .nav > li.active > a:focus, .nav > li.active > a:hover{
+			background-color : #065f7a;
+			font-weight: bold;
+			color : white;
+		}
+		
+		input,span,ul{
+			text-align :justify;
+			height:30px;
+		}
+		
+		#holidayList{
+			overflow-x : hidden;
+			overflow-y : scroll;
+			list-style-type: none;
+			border-width:2px;
+			border-color:initial;
+			border-style:inset;
+			box-sizing:border-box;
+		}
+	
+		#holidayList > li:nth-child(2n+1){
+			float:left;
+		}
+		
+		form.form-inline{
+		border:1px solid #067293;
+		margin-top:10px;
+		margin-bottom:10px;
+		padding: 2% 2% 2% 2%;
+		}
+		
+		#myForm > .form-group{
+		width:33%
+		}
+		
+		#myForm > .form-group > label, #myForm > .form-group > input, #myForm > .form-group > a{
+		margin-left : 20px;
+		text-align:justify;
+		}
+		
+		#myForm > .form-group > button {
+		height:30px;
+		}
+
+		.fileSection{
+		height:50%;
+		width:100%;
+		margin:2%;
+		}
+		
+		.fileSubSection{
+		width:45%;	
+		height:100%;	
+		border:1px solid #067293;
+		display:inline-block;
+		margin-left:1%;
+		margin-right:1%;
+		}
+		
+		.subSectionHeading{
+		height:40px;
+		background-color:#067293;
+		color:white;
+		border-radius:0;
+		text-align : center;
+		padding-top:10px;
+		}
+		
+		.subSectionHeading > button{
+		float:right;
+		}
+		
+		.syncSectionLocal{
+		height:90%;
+		padding:1% 2%;
+		}
+		
+		.syncSectionDrive{
+		height:90%;
+		padding:1% 2%;
+		}		
+		
+		.iconBtn{
+		background-color:transparent;
+		border: none;
+    	cursor:pointer;
+    	font-size:20px;
+    	top:5px;
+		}
+
+		
+		span.chainSubtasks{
+		padding-left:50%;
+		}
+		
+		.addHoliday{
+		display: inline-block;
+		}
+		
+		button:disabled{
+		cursor:not-allowed;
+		}
+		
+		.iconBtn.deleteColor{
+		color : #ff0000;
+		}
+		
+		.iconBtn.addColor{
+		color:#00cc00;
+		}
+		
+		.iconBtn.showComment{
+		color : #ffc266;
+		}
+		
+		.iconBtn.hideComment{
+		color : #ffebcc;
+		}
+		
+		.iconBtn.subTaskColor[level="0"]{
+		color : blue;
+		}
+		.iconBtn.subTaskColor[level="1"]{
+		color : green;
+		}
+		.iconBtn.subTaskColor[level="2"]{
+		color : yellow;
+		}
+		.iconBtn.subTaskColor[level="3"]{
+		color : purple;
+		}
+		.iconBtn.subTaskColor[level="4"]{
+		color : pink;
+		}
+		
+		.iconBtn.cloneTask{
+		color:#065f7a;
+		}			
+		
+		div.popover{
+		padding:0px;
+		border-radius:0px
+		}
+		
+		div.popover-content {
+		padding : 1px;
+		margin : 0px;
+		border-radius: 0px;
+		}
+		
+		textarea.comments{
+		padding:0px;
+		margin:0px;
+		border:none;
+		height:100%;
+		width:100%;
+		}
+		
+		.makeAllCapital{
+		text-transform : uppercase;
+		}	

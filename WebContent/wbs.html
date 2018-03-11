@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+ <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular-route.js" ></script>
+	<script src="resources/myApp.js"></script>
+	<script src="resources/myController2.js"></script>
+	<script src="resources/myServices.js"></script>
+	<script src="resources/validationResource.js"></script>	
+	<style>
+		.table-css{
+			border:1px solid black;
+			border-collapse:collapse;
+			width:auto;
+			margin:10px
+		}
+		
+		input.editResource{
+			border : 0px solid;
+		    font-family: monospace;
+		}
+		
+		input.editTask{
+			border : 0px solid;
+			text-align: center;
+		    font-family: monospace;
+		}
+				
+		.displayStyle{
+		text-align:center;
+		padding : 0px 10px;
+		}		
+		
+		input,select:disabled{
+			background-color : white;
+		}
+		
+	</style>
+
+</head>
+<body>
+	<div ng-app="shoppingList" ng-controller="shoppingListController2" name="nehab">
+		
+		<table class="table-css">
+			<tr> <th colspan="5"> Resource Info </th></tr>
+			<tr ng-repeat="x in resources">
+				<td>
+					<span ng-click="removeResourceFromList($index)" style="cursor:pointer;">&times;</span>
+				</td> 
+				<td>
+					<span class="displayStyle editResource" ng-model="x.name" id="resourceName">{{x.name}}</span>
+				</td>
+				<td>
+					<input value="x.jd" type="date" class="editResource" ng-blur="editResourceDetails($index)" ng-model="x.jd" id="resourceJd"/>					
+				</td>	
+				<td colspan="2">
+					<input class="editResource" ng-blur="editResourceDetails($index)" ng-model="x.holidayList" id="holidayList" ng-list />
+				</td>
+			</tr>
+		</table>
+		<br><br><br>	
+		<form name="myForm">
+		<div style="align:center">
+		Name : <input type="text" name="newName" ng-model="newName" required/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		Joining Date : <input type="date" name="newJd" ng-model="newJd" required /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		Holiday List : <input class="displayStyleDate" ng-model="newHolidayList" placeholder="dd-MM-yyyy" ng-list /> &nbsp;&nbsp;&nbsp;&nbsp;
+		<button ng-disabled="!(myForm.newName.$valid && myForm.newJd.$valid)" ng-click="addResourceToList(newName, newJd, newHolidayList)">ADD</button>
+		</div>
+		</form>
+		<br><br><br>
+		<table class="table-css">
+			<tr><th colspan = "6"> Resource Allocation </th></tr>
+			<!-- <tr ng-repeat="x in resourceAllocation | orderBy:'taskDescription'"> -->
+			<tr ng-repeat="x in resourceAllocation">
+				<td>
+					<span ng-click="removeTaskFromList($index)" style="cursor:pointer;">&times;</span>
+				</td> 
+				<td>
+				<input class="editTask" type="text" ng-model="x.taskDescription"/>
+				</td>
+				<td>
+				<select ng-init="oldResource=''" ng-model="x.name" ng-disabled="x.taskDescription === ''" ng-options="i.name for i in resources" ng-focus="oldResource=x.name" ng-blur="changeResource($index, x.name, oldResource)">
+				</select> 
+				</td>
+				<td>
+				<input class="editTask" type="number" ng-model="x.effort" ng-disabled="x.taskDescription === ''" ng-blur="changeEffort($index)"/>
+				</td>
+				<td><input class="editTask" type="date" ng-model="x.startDate" ng-disabled="x.taskDescription === ''" ng-blur="changeStartDate($index)" /></td>
+				<td><input class="editTask" type="text" value='{{x.endDate | date:"dd-MM-yyyy"}}' ng-readonly="true"/></td>
+			</tr>
+		</table> 
+		<br><br>
+		<div style="align:center">
+		<button ng-click="addTaskToList()">ADD</button>
+		</div>
+		</div>
+</body>
+</html>
