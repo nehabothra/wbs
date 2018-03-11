@@ -6,11 +6,17 @@ app
 				"taskController",
 				function($scope, $filter, utility, Data, commonHelper,
 						$timeout, importFromExcel, gService, wbsConstants,
-						modalService) {
+						modalService, $parse) {
 
+					//initialize with local cached data if available.
+					//Data.init();
 					$scope.resources = Data.getResources();
 					$scope.resourceAllocation = Data.getResourceAllocation();
-
+					$scope.statusList = wbsConstants.statusList;
+					$scope.popoverHtml = "popoverTemplate.html";
+					$scope.gsheetNameTask = Data.getGsheetNameTask();
+					$scope.gsheetidTask = Data.getGsheetIdTask();
+					
 					angular.element(document.querySelector("#resource"))
 							.removeClass("active");
 					angular.element(document.querySelector("#task")).addClass(
@@ -19,19 +25,23 @@ app
 					// Called when a new task is created
 					$scope.addTaskToList = function() {
 						var task = {
-							id : utility.getMaxId($scope.resourceAllocation,
-									-1, 0),
+							id : utility.getMaxId($scope.resourceAllocation),
 							taskDescription : wbsConstants.BLANK,
 							name : wbsConstants.BLANK,
-							effort : wbsConstants.BLANK,
+							effort : 0,
 							startDate : wbsConstants.BLANK,
 							endDate : wbsConstants.BLANK,
 							parentTask : -1,
 							level : 0,
-							isParent : false
+							isParent : false,
+							totalSubtasks : 0,
+							status : wbsConstants.BLANK,
+							jiraid : wbsConstants.BLANK,
+							prcntComplete : wbsConstants.BLANK,
+							comment : wbsConstants.BLANK
 						};
 						$scope.resourceAllocation.push(task);
-						console.log($scope.resourceAllocation);
+						//console.log($scope.resourceAllocation);
 					};
 
 					// Called when a task(and its related sub-tasks) is removed
@@ -43,59 +53,20 @@ app
 										"Are you sure you want to remove this task and all of its related sub-tasks ? ",
 										// successCallback
 										function() {
-											var effortOfTaskRemoved = $scope.resourceAllocation[index].effort;
+											var subtasks = $scope.resourceAllocation[index].totalSubtasks;
 											// Get id of parent task.
 											var pId = $scope.resourceAllocation[index].parentTask;
 											// Remove current task and its
 											// related sub tasks.
 											$scope.removeRelatedTasks(index);
-
-											if ($scope.resourceAllocation.length > 0) {
-
-												/*
-												 * Edit the parent tasks'
-												 * details if the task being
-												 * removed is its parent's last
-												 * sub-task : Get the list of
-												 * subtasks under the parent. If
-												 * it is greater than 0 do
-												 * nothing else set the isParent
-												 * flag to false.
-												 */
-												var noOfSubtasks = $filter(
-														"filter")
-														(
-																$scope.resourceAllocation,
-																{
-																	parentTask : pId
-																}, true).length;
-												if (noOfSubtasks === 0) {
-													// Following attributes will
-													// be reset
-													var pTask = $filter(
-															"filter")
-															(
-																	$scope.resourceAllocation,
-																	{
-																		id : pId
-																	}, true)[0];
-													pTask.isParent = false;
-													pTask.name = wbsConstants.BLANK;
-													pTask.startdate = wbsConstants.BLANK;
-													pTask.endDate = wbsConstants.BLANK;
-												}
-
-												if (effortOfTaskRemoved !== wbsConstants.BLANK) {
-													// update the parent task's
-													// effort.
-													commonHelper
-															.getParentEffort(
-																	pId,
-																	(-1)
-																			* effortOfTaskRemoved);
-												}
+											//update effort, start and end dates for parent tasks.		
+											commonHelper.updateParent(pId);
+											var pTask = $filter("filter")($scope.resourceAllocation,{id: pId},true)[0];
+											pTask.totalSubtasks = pTask.totalSubtasks - subtasks -1;
+											if(pTask.totalSubtasks === 0){
+												pTask.isParent = false;
 											}
-
+											
 										}, null, {
 											ok : false,
 											cancel : false,
@@ -110,13 +81,7 @@ app
 					$scope.removeRelatedTasks = function(index) {
 
 						// check if the task being deleted has any sub-tasks :
-						var subTasks = $filter("filter")
-								(
-										$scope.resourceAllocation,
-										{
-											parentTask : $scope.resourceAllocation[index].id
-										}, true);
-						if (subTasks.length === 0) {
+						if (!$scope.resourceAllocation[index].isParent) {
 							/*
 							 * If it has no subtasks, update the start and end
 							 * date for the other tasks which have the same
@@ -125,25 +90,21 @@ app
 							$scope.changeResource(index, wbsConstants.BLANK,
 									$scope.resourceAllocation[index].name);
 						} else {
+							var subTasks = $filter("filter")
+							(
+									$scope.resourceAllocation,
+									{
+										parentTask : $scope.resourceAllocation[index].id
+									}, true);
+							
 							angular.forEach(subTasks, function(obj, i) {
-								/*
-								 * Get the row-index of the task/subtask : Logic :
-								 * say we need to delete the task with id :
-								 * 1.12, then in order to get the row-index of
-								 * the particular task being removed we count
-								 * the number of tasks which are present above
-								 * it in the task list. So, there may be 3 tasks
-								 * above it in the list and we know the task id
-								 * for all of them will be less than the current
-								 * task. So, we get the index of the current
-								 * task as 3 (index count starts from 0).
-								 * 
-								 */
+								
 								var taskIndex = utility.findIndexOfTask(obj.id,
 										$scope.resourceAllocation);
 								$scope.removeRelatedTasks(taskIndex);
 							});
 						}
+					
 						// Remove the particular task.
 						$scope.resourceAllocation.splice(index, 1);
 					};
@@ -159,120 +120,67 @@ app
 						// subtasks accordingly.
 						var task = {};
 						angular.copy($scope.resourceAllocation[index], task);
-						task.id = utility.getMaxId($scope.resourceAllocation,
-								$scope.resourceAllocation[index].parentTask,
-								$scope.resourceAllocation[index].level);
-						var newTaskIndex;
-
-						if ($scope.resourceAllocation[index].parentTask === -1) {
-							newTaskIndex = $scope.resourceAllocation.length;
-						} else {
-							// Get the position of the Parent of the current
-							// task being cloned.
-							var indexOfParent = utility
-									.findIndexOfTask(
-											$scope.resourceAllocation[index].parentTask,
-											$scope.resourceAllocation);
-							// Get the number of existing descendants of the
-							// parent task.
-							var len = utility
-									.getSubTasks(
-											$scope.resourceAllocation[indexOfParent].parentTask,
-											$scope.resourceAllocation[index].parentTask,
-											$scope.resourceAllocation).length;
-
-							newTaskIndex = indexOfParent + len + 1;
-
+						task.id = utility.getMaxId($scope.resourceAllocation);
+						//subtasks to copy/clone
+						var countsubtasks = $scope.resourceAllocation[index].totalSubtasks;
+						//get location of the cloned task 
+						var position = -1;
+						if($scope.resourceAllocation[index].level === 0){
+							position = $scope.resourceAllocation.length;
+						}else{
+							position = index + countsubtasks + 1;
 						}
-						$scope.resourceAllocation.splice(newTaskIndex, 0, task);
-
-						var cloneTaskIndex = task.id;
-
-						/*
-						 * get all subtasks(descendants) of the task being
-						 * cloned using the id value of the tasks and sort them
-						 * in ascending order of their task ids, so they make be
-						 * inserted as is.
-						 */
-						var tasks = $filter("orderBy")
-								(
-										utility
-												.getSubTasks(
-														$scope.resourceAllocation[index].parentTask,
-														$scope.resourceAllocation[index].id,
-														$scope.resourceAllocation),
-										'id');
-
-						/*
-						 * Regex to find the id of the task being cloned and
-						 * then replacing that id with the id of the new task
-						 * created after cloning. The regex will vary if the
-						 * task being cloned is the top-most task
-						 */
-						var regex, regex0;
-						if (task.parentTask === -1) {
-							regex = new RegExp("^"
-									+ $scope.resourceAllocation[index].id
-									+ "(\.[1-9]\\d*)$", "gi");
-							regex0 = new RegExp("^"
-									+ $scope.resourceAllocation[index].id
-									+ "(\\d+)?$", "gi");
-						} else {
-							regex = new RegExp("^"
-									+ $scope.resourceAllocation[index].id
-									+ "(\\d+)?$", "gi");
+						//insert the topmost cloned task.
+						$scope.resourceAllocation.splice(position, 0, task);
+						for(var i = 1; i<= countsubtasks; i++){
+							var subtask = {};
+							angular.copy($scope.resourceAllocation[index+i], subtask);
+							subtask.id = utility.getMaxId($scope.resourceAllocation);
+							$scope.resourceAllocation.splice(position+i, 0, subtask);
+							//console.log(subtask.level + ":" + subtask.id);
 						}
-
-						// Clone the subtasks and add to the task list.
-						angular
-								.forEach(
-										tasks,
-										function(obj, i) {
-											var tmp = {};
-											angular.copy(obj, tmp);
-
-											var str = wbsConstants.BLANK
-													+ tmp.id;
-											tmp.id = parseFloat(str.replace(
-													regex, cloneTaskIndex
-															+ "$1"));
-
-											if (tmp.parentTask !== -1) {
-												tmpStr = wbsConstants.BLANK
-														+ tmp.parentTask;
-												/*
-												 * If level 0 task is cloned,
-												 * then its child tasks at level
-												 * 1, need their parentTask to
-												 * be replaced. So, for
-												 * replacing parentTask,
-												 * different regex(regex0) is
-												 * required.
-												 */
-												tmp.parentTask = tmp.level === 1 ? parseFloat(tmpStr
-														.replace(regex0,
-																cloneTaskIndex
-																		+ "$1"))
-														: parseFloat(tmpStr
-																.replace(
-																		regex,
-																		cloneTaskIndex
-																				+ "$1"));
-											}
-											$scope.resourceAllocation.splice(
-													++newTaskIndex, 0, tmp);
-										});
-
-						// Update the effort of the Parent task(s)(ancestor
-						// tasks) of the task being cloned :
-						if ($scope.resourceAllocation[index].effort !== wbsConstants.BLANK) {
-							commonHelper
-									.getParentEffort(
-											$scope.resourceAllocation[index].parentTask,
-											$scope.resourceAllocation[index].effort);
-						}
+						//update the value of pid for the new task:
+						utility.updatePidForClonedTasks($scope.resourceAllocation, position+1, position+countsubtasks, task.id, task.level);
+						//update the total subtasks value of the parents of the cloned task.
+						utility.updateTotalSubtasks($scope.resourceAllocation, $scope.resourceAllocation[index].parentTask , countsubtasks+1);
+						//update the parent tasks effort, start and end date:
+						commonHelper.updateParent($scope.resourceAllocation[index].parentTask);
 					};
 
+					
+					$scope.addNewTaskToList = function(index){
+						
+						// Append the new task in the end of the current task. 
+						var task = {
+								id : utility.getMaxId($scope.resourceAllocation),
+								taskDescription : wbsConstants.BLANK,
+								name : wbsConstants.BLANK,
+								effort : 0,
+								startDate : wbsConstants.BLANK,
+								endDate : wbsConstants.BLANK,
+								parentTask : $scope.resourceAllocation[index].parentTask,
+								level : $scope.resourceAllocation[index].level,
+								isParent : false,
+								totalSubtasks : 0,
+								status : wbsConstants.BLANK,
+								jiraid : wbsConstants.BLANK,
+								prcntComplete : wbsConstants.BLANK,
+								comment : wbsConstants.BLANK
+							};
+						//subtasks to copy/clone
+						var countsubtasks = $scope.resourceAllocation[index].totalSubtasks;
+						//get location of the cloned task 
+						var position = -1;
+						if($scope.resourceAllocation[index].level === 0){
+							position = $scope.resourceAllocation.length;
+						}else{
+							position = index + countsubtasks + 1;
+						}
+						//insert the topmost cloned task.
+						$scope.resourceAllocation.splice(position, 0, task);						
+					};
+					
+					
 					// Called when a subtask is created for a given task.
 					$scope.addSubTask = function(index) {
 
@@ -290,52 +198,59 @@ app
 												no : false
 											});
 						} else {
-							var effort = $scope.resourceAllocation[index].effort;
-
+							var rname = $scope.resourceAllocation[index].name;
+							var startdt = $scope.resourceAllocation[index].startDate;
 							// set the isParent flag for the parent task, and
 							// clear fields
 							// like effort, resource name , start and end date
 							// which now depends on the subtasks.
 							$scope.resourceAllocation[index].isParent = true;
-							$scope.resourceAllocation[index].effort = wbsConstants.BLANK;
 							$scope.resourceAllocation[index].name = wbsConstants.BLANK;
+							$scope.resourceAllocation[index].startDate = wbsConstants.BLANK;
+							$scope.resourceAllocation[index].effort = 0;
+							$scope.resourceAllocation[index].endDate = wbsConstants.BLANK;
+							
 
-							var subTaskId = utility.getMaxId(
-									$scope.resourceAllocation,
-									$scope.resourceAllocation[index].id,
-									subTaskLevel);
+							// increase the no of
+							// sub tasks by 1 of the
+							// current tasks'parent tasks
+							utility.updateTotalSubtasks($scope.resourceAllocation,
+									$scope.resourceAllocation[index].parentTask, 
+									1);
+							
+							var subTaskId = utility.getMaxId($scope.resourceAllocation);
+							//sub task to be added
 							var task = {
 								id : subTaskId,
-								taskDescription : subTaskId,
+								taskDescription : wbsConstants.BLANK,
 								name : wbsConstants.BLANK,
-								effort : wbsConstants.BLANK,
+								effort : 0,
 								startDate : wbsConstants.BLANK,
 								endDate : wbsConstants.BLANK,
 								parentTask : $scope.resourceAllocation[index].id,
 								level : subTaskLevel,
-								isParent : false
+								isParent : false,
+								totalSubtasks : 0
 							};
 
-							// Get the number of sub-tasks(all descendants)
-							// under the parent task.
-							var len = utility
-									.getSubTasks(
-											$scope.resourceAllocation[index].parentTask,
-											$scope.resourceAllocation[index].id,
-											$scope.resourceAllocation).length;
-							// add sub-task at the appropriate position, below
-							// the existing subtasks of the parent task.
+							var len = $scope.resourceAllocation[index].totalSubtasks;
 							$scope.resourceAllocation.splice(index + len + 1,
 									0, task);
-
 							// Update the ancestor tasks only if the 1st task is
 							// being added to the current task
-							if (len === 0) {
-								commonHelper
-										.getParentEffort(
-												$scope.resourceAllocation[index].parentTask,
-												(-1) * effort);
-							}
+								$scope.resourceAllocation[index].totalSubtasks += 1;
+								commonHelper.updateParent(task.parentTask);
+
+															
+								/*
+								 * if the sub task added is the parent task's
+								 * first sub task and some resource was assigned
+								 * to that task then update the other tasks of
+								 * the same resource
+								 */
+								if(rname !== wbsConstants.BLANK){
+									commonHelper.updateDependentTasks(rname, index, startdt);
+								}
 						}
 					};
 
@@ -350,7 +265,6 @@ app
 							// the previous resource
 							var oldStartDate = $scope.resourceAllocation[index].startDate;
 							var tempStartDate = "";
-							var idOfCurrentTask = $scope.resourceAllocation[index].id;
 
 							/*
 							 * Updating the start and end date of the current
@@ -369,13 +283,17 @@ app
 									$scope.resourceAllocation[index].effort = 1;
 								}
 
-								var hl = $filter("filter")($scope.resources, {
+								var resource = $filter("filter")($scope.resources, {
 									name : rname
-								}, true)[0].holidayList;
+								}, true)[0]; 
+								var hl = resource.holidayList;
 								// get the new start date of the task = next
 								// available date for the new resource.
-								$scope.resourceAllocation[index].startDate = $scope
-										.getStartDate(rname, index);
+								/************************changed in 18th feb - need to test once, using an api of common hlepr now******************/
+/*								$scope.resourceAllocation[index].startDate = $scope
+										.getStartDate(rname, index);*/
+								
+								$scope.resourceAllocation[index].startDate = commonHelper.getNextAvailableDate(rname, index, resource, $scope.resourceAllocation);
 
 								// get the new end date of the current task as
 								// per the new resource.
@@ -393,12 +311,24 @@ app
 												$scope.resourceAllocation[index].endDate,
 												1, hl);
 								commonHelper.updateDependentTasks(rname,
-										idOfCurrentTask, tempStartDate);
+										index, tempStartDate);
 
+								//update the next available date for the new resource
+								resource.nextAvailableOn = commonHelper
+										.getNextAvailableDate(
+												rname,
+												$scope.resourceAllocation.length,
+												resource,
+												$scope.resourceAllocation);
+								
 							} else {
+								//change effort to 0 and change the start and end dates also.
+								$scope.resourceAllocation[index].effort = 0;
 								$scope.resourceAllocation[index].startDate = wbsConstants.BLANK;
 								$scope.resourceAllocation[index].endDate = wbsConstants.BLANK;
 							}
+							//change the effort,start and end dates for parent tasks as well
+							commonHelper.updateParent($scope.resourceAllocation[index].parentTask);
 
 							if (!angular
 									.equals(oldResource, wbsConstants.BLANK)) {
@@ -407,7 +337,19 @@ app
 								// tasks assigned to previous resource whose id
 								// is greater than that of the current task.
 								commonHelper.updateDependentTasks(oldResource,
-										idOfCurrentTask, oldStartDate);
+										index, oldStartDate);
+								
+								var oresource = $filter("filter")($scope.resources, {
+									name : oldResource
+								}, true)[0]; 
+								//update the next available date for the old resource
+								oresource.nextAvailableOn = commonHelper
+										.getNextAvailableDate(
+												oldResource,
+												$scope.resourceAllocation.length,
+												oresource,
+												$scope.resourceAllocation);
+
 							}
 						}
 					};
@@ -432,11 +374,12 @@ app
 									|| $scope.resourceAllocation[index].effort <= 0) {
 								$scope.resourceAllocation[index].effort = 1;
 							}
-
+							if(!angular.equals($scope.resourceAllocation[index].startDate, wbsConstants.BLANK)){
 							var rname = $scope.resourceAllocation[index].name;
-							var hl = $filter("filter")($scope.resources, {
+							var resource = $filter("filter")($scope.resources, {
 								name : rname
-							}, true)[0].holidayList;
+							}, true)[0];
+							var hl = resource.holidayList;
 							var effort = $scope.resourceAllocation[index].effort;
 							$scope.resourceAllocation[index].endDate = utility
 									.getWorkDays(
@@ -447,32 +390,37 @@ app
 							var tempStartDate = utility.getWorkDays(
 									$scope.resourceAllocation[index].endDate,
 									1, hl);
-							var idOfCurrentTask = $scope.resourceAllocation[index].id;
 
 							// update only the tasks following this particular
 							// task
 							commonHelper.updateDependentTasks(rname,
-									idOfCurrentTask, tempStartDate);
+									index, tempStartDate);
+						
 
-						} else {
+							//update the next available date for the new resource
+							resource.nextAvailableOn = commonHelper
+									.getNextAvailableDate(
+											resource.name,
+											$scope.resourceAllocation.length,
+											resource,
+											$scope.resourceAllocation);
+						} 
 							/*
 							 * Though the resources are not assigned, we still
-							 * update the effort of the parent task without
+							 * update the effort,start and end of the parent task without
 							 * changing the corresponding start and end dates
 							 */
-							commonHelper
-									.getParentEffort(
-											$scope.resourceAllocation[index].parentTask,
-											($scope.resourceAllocation[index].effort - oldEffort));
-						}
+							commonHelper.updateParent($scope.resourceAllocation[index].parentTask);
+					}
 					};
 
 					$scope.changeStartDate = function(index) {
 
 						var rname = $scope.resourceAllocation[index].name;
-						var hl = $filter("filter")($scope.resources, {
+						var resource = $filter("filter")($scope.resources, {
 							name : rname
-						}, true)[0].holidayList;
+						}, true)[0];
+						var hl = resource.holidayList;
 						var effort = $scope.resourceAllocation[index].effort;
 						$scope.resourceAllocation[index].endDate = utility
 								.getWorkDays(
@@ -484,11 +432,21 @@ app
 								.getWorkDays(
 										$scope.resourceAllocation[index].endDate,
 										1, hl);
-						var idOfCurrentTask = $scope.resourceAllocation[index].id;
 
 						// update only the tasks following this particular task
 						commonHelper.updateDependentTasks(rname,
-								idOfCurrentTask, tempStartDate);
+								index, tempStartDate);
+						
+						//update the next available date for the new resource
+						resource.nextAvailableOn = commonHelper
+								.getNextAvailableDate(
+										resource.name,
+										$scope.resourceAllocation.length,
+										resource,
+										$scope.resourceAllocation);
+						
+						//update dates for current tasks' parent tasks
+						commonHelper.updateParent($scope.resourceAllocation[index].parentTask);
 
 					};
 
@@ -496,16 +454,13 @@ app
 					// resource of name "rname"
 					$scope.getStartDate = function(rname, index) {
 
-						// get the list of existing allocated tasks of the
-						// resource
-						var allTasks = utility.getAllAssignedTasksAsc(
-								$scope.resourceAllocation, rname, "id");
-						// get the position of current task in the list of other
-						// tasks assigned to this resource
-						var indexOfCurrentTask = allTasks.length > 1 ? $scope
-								.findTaskInList(allTasks,
-										$scope.resourceAllocation[index].id)
-								: 0;
+						var indexOfLastTaskWithSameResource = -1;		
+						angular.forEach($scope.resourceAllocation, function(obj, i){
+							if(i < index && obj.name === rname){
+								indexOfLastTaskWithSameResource = i;
+							}
+						})	;								
+								
 						/*
 						 * If not the current task is not the 1st task in the
 						 * list, compute the new start date of the task
@@ -514,11 +469,11 @@ app
 						 * will be the joining date of the resource itself.
 						 * 
 						 */
-						if (indexOfCurrentTask > 0) {
+						if (indexOfLastTaskWithSameResource > -1) {
 							var hl = $filter("filter")($scope.resources, {
 								name : rname
 							}, true)[0].holidayList;
-							var endDateOfPreviousTask = allTasks[indexOfCurrentTask - 1].endDate;
+							var endDateOfPreviousTask = $scope.resourceAllocation[indexOfLastTaskWithSameResource].endDate;
 							return utility.getWorkDays(endDateOfPreviousTask,
 									1, hl);
 						} else {
@@ -543,12 +498,6 @@ app
 					$scope.storeDateToImportTmp = function(event) {
 						if (document.querySelector("#fileImport").files.length > 0) {
 							$scope.uploadEvent = event;
-/*							alasql('SELECT * FROM FILE(?, {sheetid:"' + sheetid
-									+ '", headers:true})', [ event ], function(
-									data) {
-								$scope.importedData = data;
-								
-							});*/
 						}
 					};
 
@@ -567,16 +516,12 @@ app
 									+ '", headers:true})', [$scope.uploadEvent], function(
 									data) {
 								$scope.importedData = data;
-								console.log($scope.importedData.length);
+								//console.log($scope.importedData.length);
 								
 								if ($scope.importedData.length > 0) {
 									var data = [];
 									var row={};
-									//var error = false;
-									//var errorMessage = wbsConstants.BLANK;
 									for(var i=0; i<$scope.importedData.length; i++){
-									//angular.forEach($scope.importedData, function(row,
-											//i) {
 										row = $scope.importedData[i];
 										// create a task with default setting.
 										var task = {
@@ -585,10 +530,15 @@ app
 												name : wbsConstants.BLANK,
 												effort : wbsConstants.BLANK,
 												startDate : wbsConstants.BLANK,
-												endDate : "",
+												endDate : wbsConstants.BLANK,
 												parentTask : -1,
 												level : 0,
-												isParent : false
+												isParent : false,
+												totalSubtasks : 0,
+												prcntComplete : wbsConstants.BLANK,
+												status : wbsConstants.BLANK,
+												jiraid : wbsConstants.BLANK,
+												comment : wbsConstants.BLANK
 										};
 										error = false;
 										errorMessage = wbsConstants.BLANK; 
@@ -625,7 +575,7 @@ app
 													task.taskDescription = value;
 												}
 												break;
-											case "Name":
+											case "Resource Assigned":
 												task.name = value.trim();
 												break;
 											case "Effort":
@@ -645,24 +595,25 @@ app
 													.ExcelDateToJSDate(value);
 												}
 												break;
-											}
+											case "% Complete":
+												task.prcntComplete = parseFloat(value);
+												break;
+											case "Status":
+												task.status = value.trim();
+												break;
+											case "Jira ID":
+												task.jiraid = value.trim();
+												break;
+											case "Comments":
+												task.comment = value.trim();
+												break;
+											}											
 										});
-										
-/*										if(task.taskDescription === wbsConstants.BLANK){
-											error= true;
-											errorMesssage = "Please provide description for all the tasks and sub-tasks.";
-										}
-										
-										if(error){
-											modalService.callModal(errorMessage, 
-													null,
-													null,
-													{ok:true, cancel:false, yes:false, no:false});
-											break;
-										}else{*/
-										console.log(task);
+						
+										//console.log(task);
+										task.id = utility.getMaxId(data);
 										var pId = utility.getParentTaskId(data,
-												task.level);
+												task.level, i);
 										// If this task has some parent then set the
 										// isParent flag of that parent to true.
 										if (pId !== -1) {
@@ -670,20 +621,48 @@ app
 												id : pId
 											})[0];
 											pTask.isParent = true;
+											utility.updateTotalSubtasks(data,
+													pId, 
+													1);
 										}
-										task.id = utility.getMaxId(data, pId,
-												task.level);
 										task.parentTask = pId;
+										
 										data.push(task);
-										//}
 									}
-									//);
-									// return data;
-									// console.log(data);
 									if(!error){
 										$scope.resourceAllocation = data;
 										Data.setResourceAllocation(data);
+										
+										//update the next available date for all the resources.
+										var resourceList = Data.getResources();
+										angular.forEach(resourceList, function(resource, i){
+										resource.nextAvailableOn = commonHelper
+												.getNextAvailableDate(
+														resource.name,
+														$scope.resourceAllocation.length,
+														resource,
+														$scope.resourceAllocation);
+										});
+										
 										$scope.importedData = [];
+										
+										//cache task details
+										localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
+										
+										modalService
+										.callModal(
+												"Please note the new start-end dates may not be in sync with the current resource details.",
+												null,
+												null,
+												{
+													ok : true,
+													cancel : false,
+													yes : false,
+													no : false
+												});
+										
+										
+										$scope.$apply();
 									}
 								} else {
 									// add modal stating the sheet is empty, ask if need
@@ -716,6 +695,13 @@ app
 									Data.resetTasks();
 									$scope.resourceAllocation = Data
 											.getResourceAllocation();
+									
+									//update the next available date for all the resources.
+									var resourceList = Data.getResources();
+									angular.forEach(resourceList, function(resource, i){
+										resource.nextAvailableOn = commonHelper.getNextAvailableDate(resource.name, -1, resource, []);
+									});
+									
 								}, null, {
 									ok : false,
 									cancel : false,
@@ -727,28 +713,34 @@ app
 					$scope.exportData = function() {
 
 						// console.log($scope.resourceAllocation);
-
+						alasql.fn.changeToUpperCase = function(str){return str.toUpperCase();};
 						alasql(
 								'SELECT (CASE WHEN level=0 THEN taskDescription ELSE "" END) AS [Task Description],'
 										+ ' (case when level=1 then taskDescription else "" end) AS [Sub Task - 1],'
 										+ ' (case when level=2 then taskDescription else "" end) AS [Sub Task - 2],'
 										+ ' (case when level=3 then taskDescription else "" end) AS [Sub Task - 3],'
 										+ ' (case when level=4 then taskDescription else "" end) AS [Sub Task - 4],'
-										+ ' name AS [Name], '
+										+ ' name AS [Resource Assigned], '
 										+ 'effort AS [Effort], '
 										+ 'startDate AS [Start Date], '
-										+ 'endDate AS [End Date] '
+										+ 'endDate AS [End Date], '
+										+ 'prcntComplete AS [% Complete], '
+										+ 'status AS [Status], '
+										+ 'changeToUpperCase(jiraid) AS [Jira ID], '
+										+ 'comment AS [Comments] '
 										+ 'INTO XLSX("wbs.xlsx",{sheetid:"tasks",headers:true}) '
 										+ 'FROM ?',
 								[ $scope.resourceAllocation ]);
-
+						
+						localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
+						console.log(localStorage.getItem("resourceAllocation"));
 					};
 
 					// Write to google spreadsheet
 					$scope.sendRequestToWriteToGsheet = function() {
 												
-						var spreadsheetId = document.querySelector("#gsheetId").value.trim();
-						var sheetName = document.querySelector("#gsheetName").value;
+						var spreadsheetId = document.querySelector("#gsheetidTask").value.trim();
+						var sheetName = document.querySelector("#gsheetNameTask").value;
 
 						if (spreadsheetId === wbsConstants.BLANK
 								|| sheetName === wbsConstants.BLANK) {
@@ -776,14 +768,17 @@ app
 									var range = $scope.resourceAllocation.length + 1;
 									// Since we have only 9 columns
 									var startofRange = wbsConstants.G_START_RANGE;
-									var endofRange = "I" + range;
+									var endofRange = "M" + range;
 									// console.log(startofRange + ":" +
 									// endofRange);
 
 									var params = {
 										spreadsheetId : spreadsheetId,
 										range : sheetName
-												+ wbsConstants.G_READ_RANGE
+										+ "!"
+										+ startofRange
+										+ ":"
+										+ "M"										
 									};
 									// First clear the sheet
 									var requestToClearSheet = gapi.client.sheets.spreadsheets.values
@@ -791,8 +786,8 @@ app
 									requestToClearSheet
 											.then(
 													function(response) {
-														console
-																.log(response.result);
+														/*console
+																.log(response.result);*/
 														params = {
 															spreadsheetId : spreadsheetId,
 															range : sheetName
@@ -821,6 +816,13 @@ app
 																.then(
 																		function(
 																				response) {
+																			
+																			//cache task details
+																			localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
+																			//cache the gheet id & sheet name
+																			localStorage.setItem("gsheetidTask", spreadsheetId);
+																			localStorage.setItem("gsheetNameTask", sheetName);
+																			
 																			modalService
 																					.callModal(
 																							"Spreadsheet has been updated successfully.",
@@ -883,7 +885,8 @@ app
 						var data = [];
 						var header = [ 'Task Description', 'Sub Task - 1',
 								'Sub Task - 2', 'Sub Task - 3', 'Sub Task - 4',
-								'Name', 'Effort', 'Start Date', 'End Date' ];
+								'Resource Assigned', 'Effort', 'Start Date', 'End Date',
+								'% Complete', 'Status', 'Jira ID', 'Comments' ];
 						data.push(header);
 						angular
 								.forEach(
@@ -893,7 +896,7 @@ app
 
 											for (var i = 0; i <= wbsConstants.MAX_TASK_SUBLEVEL; i++) {
 												if (i != value.level) {
-													row.push("");
+													row.push(wbsConstants.BLANK);
 												} else {
 													row
 															.push(value.taskDescription);
@@ -908,18 +911,22 @@ app
 													.changeDateFormat(
 															value.endDate,
 															'MM/dd/yyyy'));
-
+											row.push(value.prcntComplete);
+											row.push(value.status);
+											row.push((value.jiraid).toUpperCase());
+											row.push(value.comment);
+											
 											data.push(row);
 										});
-						console.log(data);
+						//console.log(data);
 						return data;
 					};
 
 					//Read from google spreadsheet
 					$scope.sendRequestToReadFromGsheet = function() {
 
-					var spreadsheetId = document.querySelector("#gsheetId").value.trim();
-						var sheetName = document.querySelector("#gsheetName").value;
+					var spreadsheetId = document.querySelector("#gsheetidTask").value.trim();
+						var sheetName = document.querySelector("#gsheetNameTask").value;
 
 						if (spreadsheetId === wbsConstants.BLANK
 								|| sheetName === wbsConstants.BLANK) {
@@ -958,6 +965,13 @@ app
 														// console.log(response.result);
 														$scope
 																.setResourceAllocationDetails(response.result.values);
+														
+														//cache task details
+														localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
+														//cache the gheet id & sheet name
+														localStorage.setItem("gsheetidTask", spreadsheetId);
+														localStorage.setItem("gsheetNameTask", sheetName);
+														
 														modalService
 																.callModal(
 																		"Please note the new start-end dates may not be in sync with the current resource details.",
@@ -997,7 +1011,7 @@ app
 						}
 					};
 
-					//Format data read from 
+					//Format data read from gsheet.
 					$scope.setResourceAllocationDetails = function(gdata) {
 						var data = [];
 						//var header = ['Resource Name','Joining Date','Holiday List'];
@@ -1019,7 +1033,12 @@ app
 												endDate : wbsConstants.BLANK,
 												parentTask : -1,
 												level : 0,
-												isParent : false
+												isParent : false,
+												totalSubtasks : 0,
+												prcntComplete : wbsConstants.BLANK,
+												status : wbsConstants.BLANK,
+												jiraid : wbsConstants.BLANK,
+												comment : wbsConstants.BLANK
 											};
 
 											for (var x = 0; x <= wbsConstants.MAX_TASK_SUBLEVEL; x++) {
@@ -1042,9 +1061,18 @@ app
 											task.endDate = value[8] != null ? new Date(
 													value[8].trim())
 													: wbsConstants.BLANK;
+											task.prcntComplete = value[9] != null ? parseInt(value[9]
+													.trim())
+													: wbsConstants.BLANK;
+											task.status = value[10] != null ? value[10].trim()
+													: wbsConstants.BLANK;
+											task.jiraid = value[11] != null ? value[11].trim()
+													: wbsConstants.BLANK;													
+											task.comment = value[12] != null ? value[12].trim()
+													: wbsConstants.BLANK;
 
 											var pId = utility.getParentTaskId(
-													data, task.level);
+													data, task.level, i);
 											//If this task has some parent then set the isParent flag of that parent to true.
 											if (pId !== -1) {
 												var pTask = $filter("filter")(
@@ -1052,9 +1080,11 @@ app
 															id : pId
 														})[0];
 												pTask.isParent = true;
+												utility.updateTotalSubtasks(data,
+														pId, 
+														1);
 											}
-											task.id = utility.getMaxId(data,
-													pId, task.level);
+											task.id = utility.getMaxId(data);
 											task.parentTask = pId;
 
 											data.push(task);
@@ -1062,6 +1092,18 @@ app
 						//console.log(data);
 						$scope.resourceAllocation = data;
 						Data.setResourceAllocation(data);
+						
+						//update the next available date for all the resources.
+						var resourceList = Data.getResources();
+						angular.forEach(resourceList, function(resource, i){
+						resource.nextAvailableOn = commonHelper
+								.getNextAvailableDate(
+										resource.name,
+										$scope.resourceAllocation.length,
+										resource,
+										$scope.resourceAllocation);
+						});						
+						
 						$scope.$apply();
 					};
 

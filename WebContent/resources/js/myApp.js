@@ -15,8 +15,12 @@ app.config(function($routeProvider){
 		})
 		.when("/manageTasks",{
 			templateUrl : "task.html",
-			controller : "taskController1"
+			controller : "taskController"
 		});
 	
+})
+.run(function(Data){
+	
+	Data.init();
+	
 });
-

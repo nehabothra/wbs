@@ -16,14 +16,14 @@
 				<th colspan="5" style="width:30%">Task Description</th>
 				<th style="width:15%">Resource Assigned</th>
 				<th style="width:7%">Effort</th>
-				<th style="width:5%">Start Date</th>
-				<th style="width:5%">End Date</th>
+				<th style="width:4%">Start Date</th>
+				<th style="width:4%">End Date</th>
 				<th style="width:7%">% Complete</th>
-				<th style="width:15%">Status</th>
+				<th style="width:10%">Status</th>
 				<th style="width:15%">Jira ID</th>				
-				<th colspan="3" style="width:3%">
+				<th colspan="4" style="width:4%">
 				<button class="iconBtn glyphicon glyphicon-plus-sign addColor" 
-				title="Add Task"
+				title="Add New Task"
 				ng-click="addTaskToList()">
 				</button>
 				</th>
@@ -104,6 +104,14 @@
 						class="iconBtn glyphicon glyphicon-copy cloneTask"
 						></button>
 				</td>
+  				<td style="width:1%">
+					<button ng-click="addNewTaskToList($index)"
+						ng-disabled="x.taskDescription === ''"						
+						title="Add Task"					
+						class="iconBtn glyphicon glyphicon-plus-sign addColor"
+						></button>
+				</td>
+				
 			</tr>
     		<script type="text/ng-template" id="popoverTemplate.html">
         		<div>
@@ -156,11 +164,11 @@
 			<div class="syncSectionDrive">
 				<div class="form-group">
 					<label>SpreadSheet Id</label> <input type="text"
-						id="gsheetId" class="form-control" value="{{gsheetid}}"/>
+						id="gsheetidTask" class="form-control" value="{{gsheetidTask}}"/>
 				</div>
 				<div class="form-group">
-					<label>Sheet Name</label> <input type="text" id="gsheetName"
-						class="form-control" value="{{gsheetname}}"/>
+					<label>Sheet Name</label> <input type="text" id="gsheetNameTask"
+						class="form-control" value="{{gsheetNameTask}}"/>
 				</div>
 			</div>
 		</div>

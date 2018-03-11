@@ -5,12 +5,12 @@
 app.controller("resourceController", function($scope, $filter, utility, Data, commonHelper, importFromExcel, $http, $timeout, gService, wbsConstants, modalService){
 	
 	//initialize with local cached data if available.
-	Data.init();
+	//Data.init();
 	$scope.resources = Data.getResources();
 	$scope.resourceAllocation = Data.getResourceAllocation();
 	$scope.importedData = [];
-	$scope.gsheetname = localStorage.getItem("gsheetname");
-	$scope.gsheetid = localStorage.getItem("gsheetid");
+	$scope.gsheetNameResource = Data.getGsheetNameResource();
+	$scope.gsheetidResource = Data.getGsheetIdResource();
 	
 	angular.element(document.querySelector("#task")).removeClass("active");
 	angular.element(document.querySelector("#resource")).addClass("active");
@@ -381,8 +381,8 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 	      //Write to google spreadsheet
 	      $scope.sendRequestToWriteToGsheet = function(){
 	    	  
-	    	  var spreadsheetId = document.querySelector("#gsheetId").value.trim();  			
-	    	  var sheetName = document.querySelector("#gsheetName").value;
+	    	  var spreadsheetId = document.querySelector("#gsheetidResource").value.trim();  			
+	    	  var sheetName = document.querySelector("#gsheetNameResource").value;
 
 	    	  if(spreadsheetId === wbsConstants.BLANK || sheetName === wbsConstants.BLANK){
 			    		modalService.callModal("Please provide both Spreadsheet id and sheet name !!!",
@@ -453,8 +453,8 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 																			// console.log(response.result);
 																			localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
 																			//cache the gheet id & sheet name
-																			localStorage.setItem("gsheetid", spreadsheetId);
-																			localStorage.setItem("gsheetname", sheetName);
+																			localStorage.setItem("gsheetidResource", spreadsheetId);
+																			localStorage.setItem("gsheetNameResource", sheetName);
 																			
 																			
 																			modalService
@@ -540,8 +540,8 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 	     //Read from google spreadsheet
 	     $scope.sendRequestToReadFromGsheet = function(){
 	    	 
-	    	 var spreadsheetId = document.querySelector("#gsheetId").value.trim();  			
-	    	 var sheetName = document.querySelector("#gsheetName").value;
+	    	 var spreadsheetId = document.querySelector("#gsheetidResource").value.trim();  			
+	    	 var sheetName = document.querySelector("#gsheetNameResource").value;
 
 	    	 if(spreadsheetId === wbsConstants.BLANK || sheetName === wbsConstants.BLANK){
 	    		modalService.callModal("Please provide both Spreadsheet id and sheet name !!!",
@@ -573,8 +573,8 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 						//cache task details
 						localStorage.setItem("resources",angular.toJson($scope.resourceAllocation));
 						//cache the gheet id & sheet name
-						localStorage.setItem("gsheetid", spreadsheetId);
-						localStorage.setItem("gsheetname", sheetName);
+						localStorage.setItem("gsheetidResource", spreadsheetId);
+						localStorage.setItem("gsheetNameResource", sheetName);
 	  					
 		  				}, function(reason) {
 		  					console.error('error: ' + reason.result.error.message);
