@@ -141,9 +141,7 @@
 		border: none;
     	cursor:pointer;
     	font-size:20px;
-    	top:5px;
-		}
-
+    	}
 		
 		span.chainSubtasks{
 		padding-left:50%;
@@ -215,3 +213,19 @@
 		.makeAllCapital{
 		text-transform : uppercase;
 		}	
+		
+		
+		.chartBox{
+		height:50%;
+		width:100%;
+		margin:5% 2%;
+		}
+		
+		.chartElement{
+		width:45%;	
+		height:100%;	
+		display:inline-block;
+		margin-left:1%;
+		margin-right:1%;
+		}
+		

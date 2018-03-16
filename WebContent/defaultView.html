@@ -4,9 +4,17 @@
 <meta charset="ISO-8859-1">
 <title>Insert title here</title>
 </head>
-<body>
-<div>
-<!-- <img class="img-responsive" src="resources/images/image1.jpg" alt="Plan"> -->
+<div class="chartBox">
+	<div class="chartElement">
+		<canvas id="resourcedoughnut" class="chart chart-pie"
+			chart-data="resourcedata" chart-labels="resourcelabels" chart-options="resourceoptions">
+</canvas>
+	</div>
+	<div class="chartElement">
+		<canvas id="taskdoughnut" class="chart chart-pie"
+			chart-data="taskdata" chart-labels="tasklabels" chart-options="taskoptions">
+</canvas>
+	</div>
 </div>
 </body>
 </html>

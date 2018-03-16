@@ -9,7 +9,6 @@ app
 						modalService, $parse) {
 
 					//initialize with local cached data if available.
-					//Data.init();
 					$scope.resources = Data.getResources();
 					$scope.resourceAllocation = Data.getResourceAllocation();
 					$scope.statusList = wbsConstants.statusList;
@@ -41,7 +40,7 @@ app
 							comment : wbsConstants.BLANK
 						};
 						$scope.resourceAllocation.push(task);
-						//console.log($scope.resourceAllocation);
+						Data.setResourceAllocation($scope.resourceAllocation);
 					};
 
 					// Called when a task(and its related sub-tasks) is removed
@@ -66,6 +65,7 @@ app
 											if(pTask.totalSubtasks === 0){
 												pTask.isParent = false;
 											}
+											Data.setResourceAllocation($scope.resourceAllocation);
 											
 										}, null, {
 											ok : false,
@@ -145,9 +145,10 @@ app
 						utility.updateTotalSubtasks($scope.resourceAllocation, $scope.resourceAllocation[index].parentTask , countsubtasks+1);
 						//update the parent tasks effort, start and end date:
 						commonHelper.updateParent($scope.resourceAllocation[index].parentTask);
+						Data.setResourceAllocation($scope.resourceAllocation);
 					};
 
-					
+					//Will add a new task at the same level
 					$scope.addNewTaskToList = function(index){
 						
 						// Append the new task in the end of the current task. 
@@ -177,7 +178,11 @@ app
 							position = index + countsubtasks + 1;
 						}
 						//insert the topmost cloned task.
-						$scope.resourceAllocation.splice(position, 0, task);						
+						$scope.resourceAllocation.splice(position, 0, task);
+						//update the total subtasks value of the parents of the cloned task.
+						utility.updateTotalSubtasks($scope.resourceAllocation, $scope.resourceAllocation[index].parentTask , 1);
+						Data.setResourceAllocation($scope.resourceAllocation);
+						
 					};
 					
 					
@@ -251,6 +256,7 @@ app
 								if(rname !== wbsConstants.BLANK){
 									commonHelper.updateDependentTasks(rname, index, startdt);
 								}
+								Data.setResourceAllocation($scope.resourceAllocation);
 						}
 					};
 
@@ -351,7 +357,9 @@ app
 												$scope.resourceAllocation);
 
 							}
+							Data.setResourceAllocation($scope.resourceAllocation);
 						}
+						
 					};
 
 					// Called when the effort associated with a task is
@@ -411,6 +419,7 @@ app
 							 * changing the corresponding start and end dates
 							 */
 							commonHelper.updateParent($scope.resourceAllocation[index].parentTask);
+							Data.setResourceAllocation($scope.resourceAllocation);
 					}
 					};
 
@@ -447,6 +456,7 @@ app
 						
 						//update dates for current tasks' parent tasks
 						commonHelper.updateParent($scope.resourceAllocation[index].parentTask);
+						Data.setResourceAllocation($scope.resourceAllocation);
 
 					};
 
@@ -631,7 +641,6 @@ app
 									}
 									if(!error){
 										$scope.resourceAllocation = data;
-										Data.setResourceAllocation(data);
 										
 										//update the next available date for all the resources.
 										var resourceList = Data.getResources();
@@ -644,10 +653,10 @@ app
 														$scope.resourceAllocation);
 										});
 										
-										$scope.importedData = [];
+										Data.setResources(resourceList);
+										Data.setResourceAllocation($scope.resourceAllocation);
 										
-										//cache task details
-										localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
+										$scope.importedData = [];
 										
 										modalService
 										.callModal(
@@ -732,15 +741,13 @@ app
 										+ 'FROM ?',
 								[ $scope.resourceAllocation ]);
 						
-						localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
-						console.log(localStorage.getItem("resourceAllocation"));
 					};
 
 					// Write to google spreadsheet
 					$scope.sendRequestToWriteToGsheet = function() {
 												
 						var spreadsheetId = document.querySelector("#gsheetidTask").value.trim();
-						var sheetName = document.querySelector("#gsheetNameTask").value;
+						var sheetName = document.querySelector("#gsheetNameTask").value.trim();
 
 						if (spreadsheetId === wbsConstants.BLANK
 								|| sheetName === wbsConstants.BLANK) {
@@ -816,12 +823,6 @@ app
 																.then(
 																		function(
 																				response) {
-																			
-																			//cache task details
-																			localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
-																			//cache the gheet id & sheet name
-																			localStorage.setItem("gsheetidTask", spreadsheetId);
-																			localStorage.setItem("gsheetNameTask", sheetName);
 																			
 																			modalService
 																					.callModal(
@@ -926,7 +927,7 @@ app
 					$scope.sendRequestToReadFromGsheet = function() {
 
 					var spreadsheetId = document.querySelector("#gsheetidTask").value.trim();
-						var sheetName = document.querySelector("#gsheetNameTask").value;
+						var sheetName = document.querySelector("#gsheetNameTask").value.trim();
 
 						if (spreadsheetId === wbsConstants.BLANK
 								|| sheetName === wbsConstants.BLANK) {
@@ -965,12 +966,6 @@ app
 														// console.log(response.result);
 														$scope
 																.setResourceAllocationDetails(response.result.values);
-														
-														//cache task details
-														localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
-														//cache the gheet id & sheet name
-														localStorage.setItem("gsheetidTask", spreadsheetId);
-														localStorage.setItem("gsheetNameTask", sheetName);
 														
 														modalService
 																.callModal(
@@ -1107,4 +1102,11 @@ app
 						$scope.$apply();
 					};
 
+					$scope.saveGsheetDetails = function(){
+						var spreadsheetId = document.querySelector("#gsheetidTask").value.trim();
+						var sheetName = document.querySelector("#gsheetNameTask").value.trim();	
+						Data.setGsheetIdTask(spreadsheetId);
+						Data.setGsheetNameTask(sheetName);
+					};
+					
 				});

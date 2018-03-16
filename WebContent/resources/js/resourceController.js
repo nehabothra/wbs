@@ -35,6 +35,7 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 			$scope.newName=wbsConstants.BLANK;
 			$scope.newJd=wbsConstants.BLANK;
 			$scope.newHolidayList = [];
+			Data.setResources($scope.resources);
 			
 		}else{
 				modalService.callModal("The Resource " + newName
@@ -83,7 +84,8 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 
 						//remove resource from the list
 						$scope.resources.splice(index, 1);
-
+						Data.setResources($scope.resources);
+						
 						modalService
 						.callModal(
 								"Please note start-end dates of the deleted resource has been reset.",
@@ -177,6 +179,8 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 							taskList);					
 			
 		}, null, {ok:false, cancel:false, yes:true, no:true});
+		
+		Data.setResources($scope.resources);
 	};
 	
 	
@@ -204,6 +208,7 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 								Data.resetResources();
 								$scope.resources = Data
 										.getResources();
+								Data.setResources($scope.resources);
 							}, null, {
 								ok : false,
 								cancel : false,
@@ -451,11 +456,6 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 																		function(
 																				response) {
 																			// console.log(response.result);
-																			localStorage.setItem("resourceAllocation",angular.toJson($scope.resourceAllocation));
-																			//cache the gheet id & sheet name
-																			localStorage.setItem("gsheetidResource", spreadsheetId);
-																			localStorage.setItem("gsheetNameResource", sheetName);
-																			
 																			
 																			modalService
 																					.callModal(
@@ -570,12 +570,6 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 	  					//console.log(response.result);
 	  					$scope.setResourceDetails(response.result.values);
 	  					
-						//cache task details
-						localStorage.setItem("resources",angular.toJson($scope.resourceAllocation));
-						//cache the gheet id & sheet name
-						localStorage.setItem("gsheetidResource", spreadsheetId);
-						localStorage.setItem("gsheetNameResource", sheetName);
-	  					
 		  				}, function(reason) {
 		  					console.error('error: ' + reason.result.error.message);
 							var message="";
@@ -662,4 +656,10 @@ app.controller("resourceController", function($scope, $filter, utility, Data, co
 	    	 $scope.$apply();
 	     } ;     
 
+		$scope.saveGsheetDetails = function(){
+			var spreadsheetId = document.querySelector("#gsheetidResource").value.trim();
+			var sheetName = document.querySelector("#gsheetNameResource").value.trim();	
+			Data.setGsheetIdResource(spreadsheetId);
+			Data.setGsheetNameResource(sheetName);
+		};
 });

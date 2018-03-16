@@ -22,10 +22,11 @@
 				<th style="width:10%">Status</th>
 				<th style="width:15%">Jira ID</th>				
 				<th colspan="4" style="width:4%">
-				<button class="iconBtn glyphicon glyphicon-plus-sign addColor" 
+				<!--  <button class="iconBtn glyphicon glyphicon-plus-sign addColor" 
 				title="Add New Task"
 				ng-click="addTaskToList()">
-				</button>
+				</button>-->
+				
 				</th>
 				
 			</tr>
@@ -84,10 +85,12 @@
 						title="Add Comment"
 						uib-popover-template="popoverHtml"
 						popover-placement="bottom"
+						popover-trigger= "'outsideClick'"
 						class="iconBtn glyphicon glyphicon-comment showComment"
-						ng-click="clicked=!clicked"
-						ng-class="clicked ? showComment : hideComment"
 						></button>
+						<!--ng-click="clicked=!clicked"
+						ng-class="clicked ? showComment : hideComment"
+						  -->
 				</td>					
 				<td style="width:1%">
 					<button 
@@ -105,7 +108,7 @@
 						></button>
 				</td>
   				<td style="width:1%">
-					<button ng-click="addNewTaskToList($index)"
+					<button ng-click="addTaskToList()"
 						ng-disabled="x.taskDescription === ''"						
 						title="Add Task"					
 						class="iconBtn glyphicon glyphicon-plus-sign addColor"
@@ -160,6 +163,9 @@
 				<button class="iconBtn glyphicon glyphicon-cloud-upload"
 					title="Write To"				
 					ng-click="sendRequestToWriteToGsheet()"></button>
+				<button class="iconBtn glyphicon glyphicon-floppy-disk"
+					title="Save Gsheet Details"				
+					ng-click="saveGsheetDetails()"></button>					
 			</div>
 			<div class="syncSectionDrive">
 				<div class="form-group">

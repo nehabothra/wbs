@@ -96,6 +96,12 @@ app.factory("Data",function(wbsConstants){
 		
 		setResources : function(updatedResources){
 			data.resources   = updatedResources;
+			if(typeof(Storage) !== "undefined"){
+				//cache details
+				localStorage.setItem("resources",angular.toJson(data.resources));
+				}else{
+					console.log("local storage not supported");
+				}
 		},
 		
 		getResourceAllocation : function(){
@@ -104,6 +110,12 @@ app.factory("Data",function(wbsConstants){
 		
 		setResourceAllocation : function(updatedResourceAllocation){
 			data.resourceAllocation = updatedResourceAllocation;
+			if(typeof(Storage) !== "undefined"){
+				//cache details
+				localStorage.setItem("resourceAllocation",angular.toJson(data.resourceAllocation));
+				}else{
+					console.log("local storage not supported");
+				}
 		},
 		
 		resetTasks : function(){
@@ -120,6 +132,12 @@ app.factory("Data",function(wbsConstants){
 
 		setGsheetIdResource : function(sheetid){
 			data.gsheetidResource = sheetid; 
+			if(typeof(Storage) !== "undefined"){
+				//cache details
+				localStorage.setItem("gsheetidResource",data.gsheetidResource);
+				}else{
+					console.log("local storage not supported");
+				}
 		},		
 
 		getGsheetIdTask : function(){
@@ -128,6 +146,12 @@ app.factory("Data",function(wbsConstants){
 
 		setGsheetIdTask : function(sheetid){
 			data.gsheetidTask = sheetid; 
+			if(typeof(Storage) !== "undefined"){
+				//cache details
+				localStorage.setItem("gsheetidTask",data.gsheetidTask);
+				}else{
+					console.log("local storage not supported");
+				}
 		},			
 		
 		getGsheetNameResource : function(){
@@ -136,6 +160,12 @@ app.factory("Data",function(wbsConstants){
 		
 		setGsheetNameResource : function(sheetname){
 			data.gsheetNameResource  = sheetname; 
+			if(typeof(Storage) !== "undefined"){
+				//cache details
+				localStorage.setItem("gsheetNameResource",data.gsheetNameResource);
+				}else{
+					console.log("local storage not supported");
+				}
 		},
 		
 		getGsheetNameTask : function(){
@@ -144,6 +174,12 @@ app.factory("Data",function(wbsConstants){
 		
 		setGsheetNameTask : function(sheetname){
 			data.gsheetNameTask = sheetname; 
+			if(typeof(Storage) !== "undefined"){
+				//cache details
+				localStorage.setItem("gsheetNameTask",data.gsheetNameTask);
+				}else{
+					console.log("local storage not supported");
+				}
 			}		
 	};
 });

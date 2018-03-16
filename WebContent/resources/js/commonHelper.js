@@ -166,6 +166,42 @@ app.factory("commonHelper", function(Data, utility, $filter, wbsConstants){
 		}
 	};	
 	
+	commonhelper.getResourceNames = function(resources){
+		var names = [];
+		for(var i=0;i< resources.length; i++){
+			names.push(resources[i].name);
+		}
+		return names;
+	};
+	
+	commonhelper.getResourceTaskCount = function(resources, tasks){
+		var names = commonhelper.getResourceNames(resources);
+		var count = [names,[]];
+		for(var i=0;i<names.length;i++){
+			var taskcount = $filter("filter")(tasks,{name : names[i]}, true).length;
+			count[1][i]=taskcount;
+		}
+		return count;
+	};
+	
+	commonhelper.getTaskNames = function(tasks){
+		var names = [];
+		for(var i=0;i< tasks.length; i++){
+			names.push(tasks[i].taskDescription);
+		}
+		return names;
+	};
+	
+
+	commonhelper.getTaskEffortEstimate = function(tasks){
+		var parentTasks = $filter("filter")(tasks,{level : 0}, true);
+		var effort = [commonhelper.getTaskNames(parentTasks),[]];
+		for(var i=0;i<parentTasks.length;i++){
+			var effortEstimate = parentTasks[i].effort;
+			effort[1][i]=effortEstimate;
+		}
+		return effort;
+	};	
 	
 	return commonhelper;
 	
