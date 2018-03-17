@@ -5,15 +5,53 @@
 <title>Insert title here</title>
 </head>
 <div class="chartBox">
-	<div class="chartElement">
+	<div class="chartElement" ng-if="resourcedata.length > 0">
 		<canvas id="resourcedoughnut" class="chart chart-pie"
-			chart-data="resourcedata" chart-labels="resourcelabels" chart-options="resourceoptions">
+			chart-data="resourcedata" chart-labels="resourcelabels"
+			chart-options="resourceoptions">
 </canvas>
 	</div>
-	<div class="chartElement">
+	<div class="chartElement" ng-if="taskdata.length > 0">
 		<canvas id="taskdoughnut" class="chart chart-pie"
-			chart-data="taskdata" chart-labels="tasklabels" chart-options="taskoptions">
+			chart-data="taskdata" chart-labels="tasklabels"
+			chart-options="taskoptions">
 </canvas>
+	</div>
+</div>
+<div class="manual">
+	<div class="manualElement">
+		<label>Color Representation of sub-tasks</label>
+		<p>
+			<i class="glyphicon glyphicon-stop iconBtn subTaskColor" level="0"></i>
+			Level = 0
+		</p>
+		<p>
+			<i class="glyphicon glyphicon-stop iconBtn subTaskColor" level="1"></i>
+			Level = 1
+		</p>
+		<p>
+			<i class="glyphicon glyphicon-stop iconBtn subTaskColor" level="2"></i>
+			Level = 2
+		</p>
+		<p>
+			<i class="glyphicon glyphicon-stop iconBtn subTaskColor" level="3"></i>
+			Level = 3
+		</p>
+		<p>
+			<i class="glyphicon glyphicon-stop iconBtn subTaskColor" level="4"></i>
+			Level = 4
+		</p>
+	</div>
+	<div class="manualElement">
+		<label> ShortCut Keys </label>
+		<ul>
+			<li>Add new Element at level = 0 : <b>Shift + Enter</b></li>
+			<li>Add new Element at same level as current task : <b>Alt +
+					Enter</b></li>
+			<li>Add sub task of current task : <b>Ctrl + Enter</b></li>
+			<li>Delete current task and all related sub-tasks : <b>Alt +
+					Del</b></li>
+		</ul>
 	</div>
 </div>
 </body>

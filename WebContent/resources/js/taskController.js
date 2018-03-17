@@ -58,12 +58,14 @@ app
 											// Remove current task and its
 											// related sub tasks.
 											$scope.removeRelatedTasks(index);
-											//update effort, start and end dates for parent tasks.		
-											commonHelper.updateParent(pId);
-											var pTask = $filter("filter")($scope.resourceAllocation,{id: pId},true)[0];
-											pTask.totalSubtasks = pTask.totalSubtasks - subtasks -1;
-											if(pTask.totalSubtasks === 0){
-												pTask.isParent = false;
+											if(pId !== -1){
+												//update effort, start and end dates for parent tasks.		
+												commonHelper.updateParent(pId);
+												var pTask = $filter("filter")($scope.resourceAllocation,{id: pId},true)[0];
+												pTask.totalSubtasks = pTask.totalSubtasks - subtasks -1;
+												if(pTask.totalSubtasks === 0){
+													pTask.isParent = false;
+												}
 											}
 											Data.setResourceAllocation($scope.resourceAllocation);
 											
@@ -1107,6 +1109,18 @@ app
 						var sheetName = document.querySelector("#gsheetNameTask").value.trim();	
 						Data.setGsheetIdTask(spreadsheetId);
 						Data.setGsheetNameTask(sheetName);
+					};
+					
+					$scope.keyEventCallBack = function(event, index){
+						if(event.altKey && event.keyCode === 13){
+							$scope.addNewTaskToList(index);// Alt + Enter : adds new add after the current task at the same level.
+						}else if (event.ctrlKey && event.keyCode === 13){
+							$scope.cloneTask(index);// Ctrl + Enter : adds subtask under the current task.
+						}else if (event.shiftKey && event.keyCode === 13){
+							$scope.addTaskToList();// Shift + Enter : adds new level = 0 task in the end.
+						}else if (event.altKey && event.keyCode === 46){
+							$scope.removeTaskFromList(index);// Alt+Del : deletes current task and all its subtasks
+						}
 					};
 					
 				});

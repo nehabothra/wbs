@@ -22,6 +22,7 @@
 				<th style="width:10%">Status</th>
 				<th style="width:15%">Jira ID</th>				
 				<th colspan="4" style="width:4%">
+				<a class="glyphicon glyphicon-home iconBtn homeIcon" href="#!/" title="Home"></a>
 				<!--  <button class="iconBtn glyphicon glyphicon-plus-sign addColor" 
 				title="Add New Task"
 				ng-click="addTaskToList()">
@@ -33,9 +34,9 @@
 		</thead>
 		<tbody>
 			<tr ng-if="resourceAllocation.length===0">
-				<td colspan="15" class="text-center">Add some tasks.</td>
+				<td colspan="17" class="text-center">Add some tasks.</td>
 			</tr>
-			<tr ng-repeat="x in resourceAllocation" style="width:1%">
+			<tr ng-repeat="x in resourceAllocation" style="width:1%" ng-keydown="keyEventCallBack($event,$index)">
 				<td>
 					<button class="iconBtn glyphicon glyphicon-remove-sign deleteColor"
 						title="Remove Task"					
@@ -47,6 +48,7 @@
 					class="chainSubtasks glyphicon glyphicon-object-align-horizontal"></span>
 				</td>-->
 				<td colspan="5" style="width:30%"><input class="form-control" type="text"
+					
 					ng-model="x.taskDescription" /></td>
 				 <!-- <td ng-repeat="n in [].constructor(4-x.level) track by $index"> -->
 				</td>

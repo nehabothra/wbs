@@ -7,7 +7,7 @@ app.factory("Data",function(wbsConstants){
 	var data = {
 			resources : [],
           
-		   resourceAllocation : [	
+/*		   resourceAllocation : [	
  		                         	{
 			id : 1,
 			taskDescription : "",
@@ -24,8 +24,10 @@ app.factory("Data",function(wbsConstants){
 			jiraid : "",
 			comment : ""
 		}
-		  ],
+		  ],*/
 		  
+			resourceAllocation : [],	
+			
 		  gsheetNameResource : wbsConstants.BLANK,
 		  gsheetidResource : wbsConstants.BLANK,
 		  gsheetNameTask : wbsConstants.BLANK,

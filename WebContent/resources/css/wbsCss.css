@@ -73,11 +73,12 @@
 			border-style:inset;
 			box-sizing:border-box;
 		}
-	
-		#holidayList > li:nth-child(2n+1){
-			float:left;
-		}
 		
+		#holidayList > li{
+			margin-right:5px;
+			float : left;
+		}
+
 		form.form-inline{
 		border:1px solid #067293;
 		margin-top:10px;
@@ -171,20 +172,30 @@
 		color : #ffebcc;
 		}
 		
+		a.iconBtn{
+		text-decoration: none;
+		}
+		
+		.iconBtn.homeIcon{
+		color:white;
+		float:right;
+		margin-right:2%;
+		}
+		
 		.iconBtn.subTaskColor[level="0"]{
-		color : grey;
+		color : #ff0000;
 		}
 		.iconBtn.subTaskColor[level="1"]{
-		color : red;
+		color : #6bb1c6;
 		}
 		.iconBtn.subTaskColor[level="2"]{
-		color : navy;
+		color : #33cc33;
 		}
 		.iconBtn.subTaskColor[level="3"]{
-		color : green;
+		color : #ffff00;
 		}
 		.iconBtn.subTaskColor[level="4"]{
-		color : yellow;
+		color : #adad85;
 		}
 		
 		.iconBtn.cloneTask{
@@ -216,7 +227,7 @@
 		
 		
 		.chartBox{
-		height:50%;
+		height:30%;
 		width:100%;
 		margin:5% 2%;
 		}
@@ -229,3 +240,24 @@
 		margin-right:1%;
 		}
 		
+		.manual{
+		height:30%;
+		width:100%;
+		margin:5% 13%;
+		}
+		
+		.manualElement{
+		width:45%;	
+		height:100%;	
+		display:inline-block;
+		margin-left:1%;
+		margin-right:1%;
+		text-align:justify ;
+		font-family: Lucida Console;
+		font-size: 15px;
+		}				
+		
+		.manualElement > ul {
+		 list-style: square;
+		 
+		}

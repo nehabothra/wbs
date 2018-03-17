@@ -3,15 +3,23 @@
  */
 app.controller("defaultController", function($scope, Data, commonHelper){
 	  
-	  $scope.resourceDetails = commonHelper.getResourceTaskCount(Data.getResources(), Data.getResourceAllocation());
+	$scope.getResourceText = function(){
+			return 'Resource Vs Tasks';
+	};
+	
+	$scope.getTaskText = function(){
+			return 'Task Vs Estimate';
+	};
+
+	$scope.resourceDetails = commonHelper.getResourceTaskCount(Data.getResources(), Data.getResourceAllocation());
 	  $scope.resourcelabels = $scope.resourceDetails[0]; 
 	  $scope.resourcedata =  $scope.resourceDetails[1]; 
 	  $scope.resourceoptions = {
 			  "title":{
 				  display : true, 
-				  text: 'Resource Vs Tasks',
+				  text: $scope.getResourceText() ,
 				  fontSize : 20,
-				  fontFamily :'sans-serif'
+				  fontFamily :'Courier New'
 					  
 			  }
 	  };
@@ -22,11 +30,13 @@ app.controller("defaultController", function($scope, Data, commonHelper){
 	  $scope.taskoptions = {
 			  "title":{
 				  display : true, 
-				  text: 'Task Vs Estimate',
+				  text: $scope.getTaskText(),
 				  fontSize : 20,
-				  fontFamily : 'sans-serif'
+				  fontFamily : 'Courier New'
 					  
 			  }
 	  };	  
+	  
+	  
 
 });
