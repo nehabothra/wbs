@@ -8,10 +8,10 @@
         <div class="modal-body text-center" id="modal-body" ng-bind="modalCtrl.modalContent" style="white-space:pre">
         </div>
         <div class="modal-footer" ng-show="modalCtrl.footerShow" >
-            <button class="btn btn-primary" type="button" ng-show="modalCtrl.okButton" ng-click="modalCtrl.ok()">OK</button>
-            <button class="btn btn-warning" type="button" ng-show="modalCtrl.cancelButton" ng-click="modalCtrl.cancel()">Cancel</button>
-            <button class="btn btn-success" type="button" ng-show="modalCtrl.yesButton" ng-click="modalCtrl.yes()">Yes</button>
-            <button class="btn btn-danger" type="button" ng-show="modalCtrl.noButton" ng-click="modalCtrl.no()">No</button>
+            <button id="ok" class="btn btn-primary" autofocus type="button" ng-if="modalCtrl.okButton" ng-click="modalCtrl.ok()">OK</button>
+            <button id="cancel" class="btn btn-warning"  type="button" ng-if="modalCtrl.cancelButton" ng-click="modalCtrl.cancel()">Cancel</button>
+            <button id="yes" class="btn btn-success" autofocus type="button" ng-if="modalCtrl.yesButton" ng-click="modalCtrl.yes()">Yes</button>
+            <button id="no" class="btn btn-danger"   type="button" ng-if="modalCtrl.noButton" ng-click="modalCtrl.no()">No</button>
         </div>
 </body>
 </html>

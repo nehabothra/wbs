@@ -706,7 +706,7 @@ app
 									Data.resetTasks();
 									$scope.resourceAllocation = Data
 											.getResourceAllocation();
-									
+									Data.setResourceAllocation($scope.resourceAllocation);
 									//update the next available date for all the resources.
 									var resourceList = Data.getResources();
 									angular.forEach(resourceList, function(resource, i){
@@ -1115,7 +1115,7 @@ app
 						if(event.altKey && event.keyCode === 13){
 							$scope.addNewTaskToList(index);// Alt + Enter : adds new add after the current task at the same level.
 						}else if (event.ctrlKey && event.keyCode === 13){
-							$scope.cloneTask(index);// Ctrl + Enter : adds subtask under the current task.
+							$scope.addSubTask(index);// Ctrl + Enter : adds subtask under the current task.
 						}else if (event.shiftKey && event.keyCode === 13){
 							$scope.addTaskToList();// Shift + Enter : adds new level = 0 task in the end.
 						}else if (event.altKey && event.keyCode === 46){
